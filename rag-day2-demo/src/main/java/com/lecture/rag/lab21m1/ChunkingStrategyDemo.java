@@ -6,13 +6,16 @@ import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
  * M2.1 — 청킹 전략 4종을 실제 시나리오 문서로 비교.
- * 실행: ./mvnw spring-boot:run -Dspring-boot.run.profiles=chunking-strategies
+ * 실행: ./run.sh chunking-strategies
  */
 @Component
 @Profile("chunking-strategies")
@@ -30,7 +33,7 @@ public class ChunkingStrategyDemo implements CommandLineRunner {
         compareFixedVsRecursive();
 
         System.out.println();
-        System.out.println("################ 2. 문서 구조 활용 청킹 (제N조 경계) ################");
+        System.out.println("################ 2. 문서 구조 활용 청킹 (제N조 경계 / 마크다운 헤더 경계) ################");
         structureBased();
 
         System.out.println();
@@ -52,6 +55,19 @@ public class ChunkingStrategyDemo implements CommandLineRunner {
         return new Document(combined);
     }
 
+    /**
+     * 마크다운 로더. PDF와 달리 줄바꿈(\n)이 헤더 인식의 기준이므로
+     * 공백/탭만 정규화하고 개행은 절대 건드리지 않는다.
+     */
+    private Document loadMarkdown(String file) {
+        try (var in = new ClassPathResource("scenarios/" + file).getInputStream()) {
+            String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            return new Document(text.replaceAll("[ \\t]+", " "));
+        } catch (IOException e) {
+            throw new RuntimeException("마크다운 로드 실패: " + file, e);
+        }
+    }
+
     private void compareFixedVsRecursive() {
         Document doc = loadFullText("4-terms-startuprecipe.pdf");
 
@@ -70,14 +86,39 @@ public class ChunkingStrategyDemo implements CommandLineRunner {
         }
     }
 
+    /**
+     * 같은 StructureBasedSplitter를 Pattern만 바꿔 끼워서 두 가지 구조에 적용.
+     * (1) PDF 이용약관 → "제N조" 조항 경계
+     * (2) 마크다운 문서 → "#" 헤더 경계
+     * 스플리터 코드는 한 줄도 안 바뀐다는 게 이 설계의 핵심.
+     */
     private void structureBased() {
-        Document doc = loadFullText("4-terms-startuprecipe.pdf");
-        StructureBasedSplitter splitter = StructureBasedSplitter.forKoreanArticles();
-        List<Document> chunks = splitter.split(doc);
-        System.out.println("청크 수: " + chunks.size() + " (실제 조항 수와 비교해볼 것)");
-        for (int i = 0; i < Math.min(4, chunks.size()); i++) {
-            System.out.println("  [" + i + "] " + preview(chunks.get(i).getText(), 100));
+        // (1) 제N조 경계
+        Document terms = loadFullText("4-terms-startuprecipe.pdf");
+        List<Document> articleChunks = StructureBasedSplitter.forKoreanArticles().split(terms);
+        System.out.println("[제N조 경계] 청크 수: " + articleChunks.size() + " (실제 조항 수와 비교해볼 것)");
+        for (int i = 0; i < Math.min(3, articleChunks.size()); i++) {
+            System.out.println("  [" + i + "] " + preview(articleChunks.get(i).getText(), 100));
         }
+
+        // (2) 마크다운 헤더 경계
+        System.out.println();
+        Document md = loadMarkdown("namu-mangnyeong.md");
+        List<Document> headerChunks = StructureBasedSplitter.forMarkdownHeaders().split(md);
+        System.out.println("[마크다운 헤더 경계] 청크 수: " + headerChunks.size() + " (실제 헤더 수와 비교해볼 것)");
+        for (int i = 0; i < headerChunks.size(); i++) {
+            String text = headerChunks.get(i).getText();
+            System.out.printf("  [%d] (%4d자) %-22s | %s%n",
+                    i, text.length(), headingOf(text), preview(text, 60));
+        }
+
+        // 고정 크기와의 차이를 수치로
+        System.out.println();
+        List<Document> fixedOnMd = TokenTextSplitter.builder().withChunkSize(200).build()
+                .apply(List.of(md));
+        printStats("Fixed-size(200)", fixedOnMd);
+        printStats("헤더 구조", headerChunks);
+        System.out.println("  → 구조 청킹은 의미 경계를 지키는 대신 청크 크기가 들쭉날쭉해짐");
     }
 
     private void slidingWindow() {
@@ -109,6 +150,18 @@ public class ChunkingStrategyDemo implements CommandLineRunner {
 
         List<Document> chunks = chunker.split(doc);
         System.out.println("threshold=0.7 기준 생성된 청크 수: " + chunks.size());
+    }
+
+    /** 청크 첫 줄에서 헤더 텍스트만 뽑기 */
+    private String headingOf(String text) {
+        String first = text.lines().findFirst().orElse("");
+        return first.startsWith("#") ? first.replaceAll("^#+\\s*", "") : "(서문)";
+    }
+
+    private void printStats(String label, List<Document> chunks) {
+        var stats = chunks.stream().mapToInt(c -> c.getText().length()).summaryStatistics();
+        System.out.printf("  %-16s n=%2d  min=%4d  avg=%6.1f  max=%5d%n",
+                label, stats.getCount(), stats.getMin(), stats.getAverage(), stats.getMax());
     }
 
     private String preview(String text, int len) {
