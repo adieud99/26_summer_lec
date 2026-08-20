@@ -7,6 +7,7 @@ spring:
       max-request-size: 20MB
 
   # [Lab2.1 추가] 도커 PGVector 접속 정보
+  # Lab1.3의 buildPgVectorStore()에서 JdbcTemplate 주입용으로만 씀 (PGVector가 실제로 안 떠 있어도 앱은 정상 기동됨 — Hikari는 지연 연결)
   datasource:
     url: jdbc:postgresql://localhost:5432/ragdb
     username: postgres
