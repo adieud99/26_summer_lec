@@ -5,6 +5,13 @@ spring:
     multipart:
       max-file-size: 20MB   # 기본값 1MB — Lab1.4 PDF 업로드에서 413 나는 걸 막기 위해 올림
       max-request-size: 20MB
+
+  # [Lab2.1 추가] 도커 PGVector 접속 정보
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ragdb
+    username: postgres
+    password: postgres
+
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -14,6 +21,14 @@ spring:
       chat:
         options:
           model: llama3.2:3b
+
+    # [Lab2.1 추가] SimpleVectorStore(인메모리) → PgVectorStore 교체용 설정
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1024   # bge-m3 기준 — Lab1.1에서 확인한 embed(...).length 값과 반드시 일치
+        initialize-schema: true
 
 # Lab1.3 실습 문서 경로 (Lab1.2는 agentic-rag-survey.pdf를 코드에 직접 고정해서 씀)
 rag:
