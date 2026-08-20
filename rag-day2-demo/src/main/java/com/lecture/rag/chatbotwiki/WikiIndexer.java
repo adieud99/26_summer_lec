@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@Profile("chatbot")
+@Profile({"chatbot", "chatbot-api"})
 public class WikiIndexer {
 
     public static final String SOURCE_JEJU = "jeju-wiki";
@@ -23,7 +23,6 @@ public class WikiIndexer {
     private static final String KIMCHI_PATH = "scenarios/7-wiki-kimchi.txt";
 
     private final VectorStore vectorStore;
-
     public WikiIndexer(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
