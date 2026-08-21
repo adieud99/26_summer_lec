@@ -10,8 +10,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 case "${1:-}" in
-  chunking-strategies|mmr|lab21|lab22|query-transform|lab23)
-    ./mvnw spring-boot:run -Dspring-boot.run.profiles="$1"
+  chunking-strategies|lab21|lab22|lab23|chatbot|chatbot-api|catalog|catalog-api)
+  ./mvnw spring-boot:run -Dspring-boot.run.profiles="$1"
     ;;
   *)
     echo "사용법: ./run.sh <chunking-strategies|mmr|lab21|lab22|query-transform|lab23>"
