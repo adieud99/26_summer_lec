@@ -89,7 +89,7 @@ public class StudentRagPipeline extends AbstractRagPipeline {
      */
     @Override
     protected Optional<List<String>> rewriteQueries(String question, List<ChatRequest.Turn> history,
-            RagOptions options) {
+                                                    RagOptions options) {
         if (question == null || question.isBlank()) {
             return Optional.empty();
         }
@@ -263,7 +263,7 @@ public class StudentRagPipeline extends AbstractRagPipeline {
      */
     @Override
     protected Optional<String> selfCheck(String question, String answer, List<SourceRef> sources,
-            RagOptions options) {
+                                         RagOptions options) {
         if (answer == null || answer.isBlank()) {
             return Optional.of("주의: 생성된 답변이 없어 검증할 수 없습니다.");
         }
