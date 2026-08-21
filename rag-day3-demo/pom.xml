@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.lecture.rag</groupId>
-	<artifactId>rag-day1-demo</artifactId>
+	<artifactId>rag-day3-demo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>rag-day1-demo</name>
+	<name>rag-day3-demo</name>
 	<description/>
 	<url/>
 	<licenses>
@@ -47,28 +47,9 @@
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-vector-store-advisor</artifactId>
 		</dependency>
-
-		<!-- [Lab2.1 추가] SimpleVectorStore(인메모리) → PgVectorStore 교체용.
-             이 스타터가 있어야 Spring이 PgVectorStore 빈을 자동 구성한다.
-             spring-ai-vector-store 는 VectorStore 인터페이스만 제공하므로 빈이 생기지 않음.
-             버전은 아래 spring-ai-bom 이 관리하므로 명시하지 않는다. -->
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>3.1.0</version>
 		</dependency>
 
 		<dependency>
